@@ -3,7 +3,7 @@ import java.io.Serializable;
 /**
  * Created by Marcus on 2016-08-21.
  */
-public class SkiGuidePacket implements Serializable{
+public class SkiRequestPacket implements Serializable{
 
     public enum Age {
         ZEROFOUR ("0-4 år"),
@@ -30,7 +30,7 @@ public class SkiGuidePacket implements Serializable{
     private int length;
     private Style style;
 
-    public SkiGuidePacket(Age pAge, Style pStyle, int pLength){
+    public SkiRequestPacket(Age pAge, Style pStyle, int pLength){
         age = pAge;
         length = pLength;
         style = pStyle;

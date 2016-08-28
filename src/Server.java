@@ -23,8 +23,9 @@ public class Server {
                 clientSocket = serverSocket.accept();
                 ObjectInputStream inFromClient = new ObjectInputStream(clientSocket.getInputStream());
 
-                SkiGuidePacket packet = (SkiGuidePacket)inFromClient.readObject();
-                String recommendation = calculateRecommendation(packet);
+                //TODO instance of packet
+                SkiRequestPacket packet = (SkiRequestPacket)inFromClient.readObject();
+                SkiRecommendationPacket recommendation = calculateRecommendation(packet);
                 sendRecommendation(recommendation);
                 clientSocket.close();
             }
@@ -34,32 +35,32 @@ public class Server {
         }
     }
 
-    private void sendRecommendation(String recommendation) {
+    private void sendRecommendation(SkiRecommendationPacket recommendation) {
         try {
             System.out.println(recommendation);
-            DataOutputStream dOut = new DataOutputStream(clientSocket.getOutputStream());
-            dOut.writeUTF(recommendation);
-            dOut.flush();
+            ObjectOutputStream outToServer = new ObjectOutputStream(clientSocket.getOutputStream());
+            outToServer.writeObject(recommendation);
         } catch (Exception e) {
             e.printStackTrace();
         }
     }
 
-    private String calculateRecommendation(SkiGuidePacket packet) {
-        String result;
-        if(packet.getAge() == SkiGuidePacket.Age.ZEROFOUR){
-            result = String.valueOf(packet.getLength());
-        } else if (packet.getAge() == SkiGuidePacket.Age.FIVEEIGHT){
-            result = String.valueOf(packet.getLength() + 10) + " - " + String.valueOf(packet.getLength() + 20);
+    private SkiRecommendationPacket calculateRecommendation(SkiRequestPacket packet) {
+        SkiRecommendationPacket result;
+        if(packet.getAge() == SkiRequestPacket.Age.ZEROFOUR){
+            result = new SkiRecommendationPacket(packet.getLength(), 0, null);
+        } else if (packet.getAge() == SkiRequestPacket.Age.FIVEEIGHT){
+            result = new SkiRecommendationPacket(packet.getLength() + 10, packet.getLength() + 20, null);
         } else { //NINEPLUS
-            if(packet.getStyle().equals(SkiGuidePacket.Style.KLASSISK)){
+            if(packet.getStyle().equals(SkiRequestPacket.Style.KLASSISK)){
                 if(packet.getLength() >= 187){
-                    result = "207";
+                    result = new SkiRecommendationPacket(207, 0, "Klassiska skidor tillverkas bara till längder upp till 207cm.");
                 } else {
-                    result = String.valueOf(packet.getLength() + 20);
+                    result = new SkiRecommendationPacket(packet.getLength() + 20, 0, null);
                 }
             } else { //FRISITL
-                result = String.valueOf(packet.getLength() + 10) + " - " + String.valueOf(packet.getLength() + 15);
+                result = new SkiRecommendationPacket(packet.getLength() + 10, packet.getLength() + 15, "Enligt tävlingsreglerna får " +
+                        "inte skidan understiga kroppslängden med mer än 10cm.");
             }
         }
         return result;
